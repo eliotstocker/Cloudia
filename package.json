@@ -1,0 +1,23 @@
+{
+  "name": "brandwatch-wordcloud",
+  "version": "1.0.0",
+  "description": "A Super Simple Word Cloud Library for a Brandwatch Coding Task ==============================================================",
+  "main": "Cloudia.js",
+  "scripts": {
+    "build": "grunt default"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nanoajax": "^0.4.3"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.3",
+    "grunt-closurecompiler-new-grunt": "^1.0.1",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-less": "^2.0.0",
+    "grunt-jsdoc-to-markdown": "^4.0.0",
+    "less-plugin-autoprefix": "^1.5.1",
+    "less-plugin-clean-css": "^1.5.1"
+  }
+}
