@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <title>Cloudia Library Example | Brandwatch Data Word Cloud</title>
+        <script src="Build/Cloudia.min.js"></script>
+        <link rel="stylesheet" href="Build/Cloudia.min.css">
+        <style>
+            body {
+                font-family: sans-serif;
+            }
+            .controls {
+                background: #eeeeee;
+                border-radius: 3px;
+                padding: 16px;
+                z-index: 20;
+                display: inline-block;
+                position: fixed;
+                top: 16px;
+                right: 16px;
+            }
+            /*.wordcloudOutput {
+                width: 1280px;
+                height: 720px;
+                background: #111111;
+                overflow: hidden;
+            }*/
+        </style>
+    </head>
+    <body>
+        <div class="controls">
+            Generation Speed: <input type="range" min="3" max="100" id="generationSpeed" onchange="updateGenerationSpeed(event)" value="10"/><br>
+            Size Count: <input type="range" min="1" max="20" id="sizeCount" onchange="updateSizeCount(event)" value="6"/><br>
+            Text Size: <input type="range" min="2" max="100" id="textSize" onchange="updateTextSize(event)" value="12"/><br>
+        </div>
+        <h1>WordCloud generated from: <a href="https://gist.githubusercontent.com/grahamscott/65b43572ad18c5fbdd87">BrandWatch Coding Task</a></h1>
+        <div class="wordcloudOutput"></div>
+        <script>
+            var cloud = new Cloudia({
+              target: document.querySelector(".wordcloudOutput"),
+              data: "https://gist.githubusercontent.com/grahamscott/65b43572ad18c5fbdd87/raw/d755523d6a281695e3b882db8c115ff37fc070fa/topics.json"
+            });
+
+            function updateGenerationSpeed(e) {
+              cloud.setGenerationSpeed(parseInt(e.currentTarget.value));
+            }
+
+            function updateSizeCount(e) {
+              cloud.setSizeCount(parseInt(e.currentTarget.value));
+            }
+
+            function updateTextSize(e) {
+              cloud.setTextSize(parseInt(e.currentTarget.value))
+            }
+        </script>
+    </body>
+</html>
