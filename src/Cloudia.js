@@ -386,7 +386,7 @@ Cloudia.prototype = {
     this['sizeCount'] = parseInt(count, 10);
     this._sizes = this._calculateSizeRange();
     for(var i in this._data['topics']) {
-      this._setWordSize(this._data['topics'][i], 10);
+      this._setWordSize(this._data['topics'][i]);
     }
     this._layoutWords();
   },

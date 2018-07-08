@@ -1,9 +1,11 @@
 A Super Simple Word Cloud Library for a Brandwatch Coding Task
 ==============================================================
 
+Cloudia is a super simple JavaScript tag cloud library outputting pure HTML and CSS, developed for the Brandwatch front-end developer challenge
+
 Demo
 ----
-Coming Soon
+[Cloudia Demo using topic data from ](https://eliotstocker.github.io/Cloudia/) [Brandwatch front-end developer challenge](https://gist.github.com/grahamscott/65b43572ad18c5fbdd87)
 
 Usage
 -----
