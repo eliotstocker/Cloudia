@@ -28,6 +28,7 @@
     <body>
         <div class="controls">
             Generation Speed: <input type="range" min="3" max="100" id="generationSpeed" onchange="updateGenerationSpeed(event)" value="10"/><br>
+            Rotation Step Size: <input type="range" min="5" max="180" step="5" id="rotationStep" onchange="updateRotationStep(event)" value="20"/><br>
             Size Count: <input type="range" min="1" max="20" id="sizeCount" onchange="updateSizeCount(event)" value="6"/><br>
             Text Size: <input type="range" min="2" max="100" id="textSize" onchange="updateTextSize(event)" value="12"/><br>
         </div>
@@ -41,6 +42,10 @@
 
             function updateGenerationSpeed(e) {
               cloud.setGenerationSpeed(parseInt(e.currentTarget.value));
+            }
+
+            function updateRotationStep(e) {
+              cloud.setRotationStep(parseInt(e.currentTarget.value));
             }
 
             function updateSizeCount(e) {

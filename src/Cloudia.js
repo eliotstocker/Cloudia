@@ -7,6 +7,8 @@
  * @param {boolean}          [options.ignoreBadItems=false]   - Ignore items in the cloud that don't conform to the schema
  * @param {number}           [options.generationSpeed=10]     - number of pixels to move at a time when trying to place words,
  * the larger the number the quicker the cloud will be generated, but you will be more likely to get larger gaps
+ * @param {number}           [options.rotationStep=20]        - number of degrees to rotate each time trying to place a word,
+ * the larger the number the quicker the cloud will be generated, but you will be more likely to get larger gaps, or odd shapes
  * @param {number}           [options.sizeCount=6]            - number of sizes for the words in the cloud
  * @constructor
  */
@@ -35,6 +37,9 @@ var Cloudia = function(options) {
   }
   if(options['textSize']) {
     this['textSize'] = parseFloat(options['textSize']);
+  }
+  if(options['rotationStep']) {
+    this['rotationStep'] = parseFloat(options['rotationStep']);
   }
 
   //private vars
@@ -90,6 +95,7 @@ Cloudia.prototype = {
   'language': 'en',
   'generationSpeed': 10,
   'textSize': 12,
+  'rotationStep': 20,
 
   //DATA RETRIEVAL
   //use nanoajax to make a call to the server for the JSON content
@@ -268,27 +274,17 @@ Cloudia.prototype = {
     var moveAmount = 0;
     while(this._isOverlappingExisting(x, y, item.width, item.height)) {
       moveAmount += this['generationSpeed'];
-      //try moving outward counter clockwise from the middle
-      if(!this._isOverlappingExisting(x, y + moveAmount, item.width, item.height)) {
-        y = y + moveAmount;
-      } else if(!this._isOverlappingExisting(x + moveAmount, y + moveAmount, item.width, item.height)) {
-        y = y + moveAmount;
-        x = x + moveAmount;
-      } else if(!this._isOverlappingExisting(x + moveAmount, y, item.width, item.height)) {
-        x = x + moveAmount;
-      } else if(!this._isOverlappingExisting(x + moveAmount, y - moveAmount, item.width, item.height)) {
-        x = x + moveAmount;
-        y = y - moveAmount;
-      } else if(!this._isOverlappingExisting(x, y - moveAmount, item.width, item.height)) {
-        y = y - moveAmount;
-      } else if(!this._isOverlappingExisting(x - moveAmount, y - moveAmount, item.width, item.height)) {
-        x = x - moveAmount;
-        y = y - moveAmount;
-      } else if(!this._isOverlappingExisting(x - moveAmount, y, item.width, item.height)) {
-        x = x - moveAmount;
-      } else if(!this._isOverlappingExisting(x - moveAmount, y + moveAmount, item.width, item.height)) {
-        x = x - moveAmount;
-        y = y + moveAmount;
+      var rotation = 0;
+      while(rotation < 360) {
+        var rads = this._degreesToRads(rotation);
+        var xM = Math.cos(rads) * moveAmount;
+        var yM = Math.sin(rads) * moveAmount;
+        if (!this._isOverlappingExisting(x + xM, y + yM, item.width, item.height)) {
+          x = x + xM;
+          y = y + yM;
+          break;
+        }
+        rotation += this['rotationStep'];
       }
     }
 
@@ -303,6 +299,9 @@ Cloudia.prototype = {
       width: item.width,
       height: item.height
     });
+  },
+  _degreesToRads: function(angle) {
+    return angle * (Math.PI / 180);
   },
   //check if current item overlaps any known items
   _isOverlappingExisting: function(x, y, w, h) {
@@ -395,6 +394,12 @@ Cloudia.prototype = {
     this['generationSpeed'] = parseInt(speed, 10);
     this._layoutWords();
   },
+  //inner workings for 'setRotationStep' method
+  _updateRotationStep: function(step) {
+    this['rotationStep'] = parseInt(step, 10);
+    this._layoutWords();
+  },
+  //inner workings for 'setTextSize' method
   _updateTextSize: function(size) {
     this['textSize'] = parseInt(size, 10);
     this._targetEl.style.fontSize = this['textSize'] + 'px';
@@ -424,6 +429,18 @@ Cloudia.prototype = {
     }
     clearTimeout(this._generationDebounce);
     this._generationDebounce = setTimeout(this._updateGenerationSpeed.bind(this, speed), 250);
+  },
+  /**
+   * change the rotation step side at run time (Will regenerate the cloud)
+   * @param {number} step - rotation step size (in degrees), the lower the number, the closer your words are likely to be,
+   * higher numbers will generate significantly faster
+   */
+  'setRotationStep': function(step) {
+    if(typeof step !== 'number') {
+      throw new Error('value must be a number');
+    }
+    clearTimeout(this._stepDebounce);
+    this._stepDebounce = setTimeout(this._updateRotationStep.bind(this, step), 250);
   },
   /**
    * change the overall text size at run time (Will regenerate the cloud)

@@ -7,6 +7,7 @@
     * [new Cloudia(options)](#new_Cloudia_new)
     * [.setSizeCount(count)](#Cloudia+setSizeCount)
     * [.setGenerationSpeed(speed)](#Cloudia+setGenerationSpeed)
+    * [.setRotationStep(step)](#Cloudia+setRotationStep)
     * [.setTextSize(size)](#Cloudia+setTextSize)
 
 <a name="new_Cloudia_new"></a>
@@ -23,6 +24,7 @@ Cloudia a simple WordCloud library By Eliot Stocker
 | [options.textSize] | <code>number</code> | <code>12</code> | Overall text size |
 | [options.ignoreBadItems] | <code>boolean</code> | <code>false</code> | Ignore items in the cloud that don't conform to the schema |
 | [options.generationSpeed] | <code>number</code> | <code>10</code> | number of pixels to move at a time when trying to place words, the larger the number the quicker the cloud will be generated, but you will be more likely to get larger gaps |
+| [options.rotationStep] | <code>number</code> | <code>20</code> | number of degrees to rotate each time trying to place a word, the larger the number the quicker the cloud will be generated, but you will be more likely to get larger gaps, or odd shapes |
 | [options.sizeCount] | <code>number</code> | <code>6</code> | number of sizes for the words in the cloud |
 
 <a name="Cloudia+setSizeCount"></a>
@@ -46,6 +48,17 @@ change the generation speed at run time (Will regenerate the cloud)
 | Param | Type | Description |
 | --- | --- | --- |
 | speed | <code>number</code> | generation speed, the lower the number, the closer your words are likely to be, higher numbers will generate significantly faster |
+
+<a name="Cloudia+setRotationStep"></a>
+
+### cloudia.setRotationStep(step)
+change the rotation step side at run time (Will regenerate the cloud)
+
+**Kind**: instance method of [<code>Cloudia</code>](#Cloudia)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| step | <code>number</code> | rotation step size (in degrees), the lower the number, the closer your words are likely to be, higher numbers will generate significantly faster |
 
 <a name="Cloudia+setTextSize"></a>
 
