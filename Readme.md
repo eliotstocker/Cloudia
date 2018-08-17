@@ -65,6 +65,8 @@ Full Class Documentation
 <a name="Cloudia"></a>
 
 ## Cloudia
+Cloudia a simple WordCloud library By Eliot Stocker
+
 **Kind**: global class  
 
 * [Cloudia](#Cloudia)
@@ -77,8 +79,6 @@ Full Class Documentation
 <a name="new_Cloudia_new"></a>
 
 ### new Cloudia(options)
-Cloudia a simple WordCloud library By Eliot Stocker
-
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |

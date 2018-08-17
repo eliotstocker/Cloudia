@@ -12,102 +12,78 @@
  * @param {number}           [options.sizeCount=6]            - number of sizes for the words in the cloud
  * @constructor
  */
-var Cloudia = function(options) {
-  //parse options
-  if (!options['target']) {
-    throw new Error('You must specify a target element into which the cloud will be generated');
-  }
-  if (!options['data']) {
-    throw new Error('You must data for cloud generation, data can be a valid JSON String, a javascript object or a URL String');
-  }
+class Cloudia {
+  constructor(options) {
+    //parse options
+    if (!options['target']) {
+      throw new Error('You must specify a target element into which the cloud will be generated');
+    }
+    if (!options['data']) {
+      throw new Error('You must data for cloud generation, data can be a valid JSON String, a javascript object or a URL String');
+    }
 
-  if (!this._isDomElement(options['target'])) {
-    throw new Error('target option should specify a valid DOM Element');
-  }
+    if (!Cloudia._isDomElement(options['target'])) {
+      throw new Error('target option should specify a valid DOM Element');
+    }
 
-  if(options['target'].innerHTML !== '') {
-    throw new Error('target should be empty');
-  }
+    if(options['target'].innerHTML !== '') {
+      throw new Error('target should be empty');
+    }
 
-  if(options['generationSpeed']) {
-    this['generationSpeed'] = parseInt(options['generationSpeed'], 10);
-  }
-  if(options['sizeCount']) {
-    this['sizeCount'] = parseInt(options['sizeCount'], 10);
-  }
-  if(options['textSize']) {
-    this['textSize'] = parseFloat(options['textSize']);
-  }
-  if(options['rotationStep']) {
-    this['rotationStep'] = parseFloat(options['rotationStep']);
-  }
+    if(options['generationSpeed']) {
+      this['generationSpeed'] = parseInt(options['generationSpeed'], 10);
+    }
+    if(options['sizeCount']) {
+      this['sizeCount'] = parseInt(options['sizeCount'], 10);
+    }
+    if(options['textSize']) {
+      this['textSize'] = parseFloat(options['textSize']);
+    }
+    if(options['rotationStep']) {
+      this['rotationStep'] = parseFloat(options['rotationStep']);
+    }
 
-  //private vars
-  this._rawData = null;
-  this._data = null;
-  this._targetEl = options['target'];
-  this._ignoreBadItems = options['ignoreBadItems'] === true;
-  this._positions = [];
-  this._sizes = [];
+    //private vars
+    this._rawData = null;
+    this._data = null;
+    this._targetEl = options['target'];
+    this._ignoreBadItems = options['ignoreBadItems'] === true;
+    this._positions = [];
+    this._sizes = [];
 
-  //debounce timeout handlers
-  this._sizeDebounce = 0;
-  this._generationDebounce = 0;
-  this._resizeDebounce = 0;
+    //debounce timeout handlers
+    this._sizeDebounce = 0;
+    this._generationDebounce = 0;
+    this._resizeDebounce = 0;
 
-  //check for direct JS Object Passed
-  if(typeof options['data'] === 'object') {
-    this._data = options['data'];
-    this._initialise();
-  } else {
-    //quick and simple test to see if data is JSON
-    if (options['data'].indexOf('{') === 0) {
-      this._rawData = options['data'];
-      this._data = JSON.parse(this._rawData);
+    //check for direct JS Object Passed
+    if(typeof options['data'] === 'object') {
+      this._data = options['data'];
       this._initialise();
     } else {
-      //otherwise we assume URL
-      this._getDataFromURL(options['data'], this._dataReceived.bind(this));
+      //quick and simple test to see if data is JSON
+      if (options['data'].indexOf('{') === 0) {
+        this._rawData = options['data'];
+        this._data = JSON.parse(this._rawData);
+        this._initialise();
+      } else {
+        //otherwise we assume URL
+        Cloudia._getDataFromURL(options['data'], this._dataReceived.bind(this));
+      }
     }
   }
-
-};
-
-Cloudia.prototype = {
-  //vars
-  _itemSchema: {
-    'label': 'string',
-    'sentimentScore': 'number',
-    'sentiment': 'object',
-    'volume': 'number',
-    'id': 'string'
-  },
-  _i18n: {
-    'en': {
-      'stats_title': 'Information on topic \"{string}\":',
-      'total_mentions': 'Total Mentions: {string}',
-      'positive_mentions': 'Positive Mentions: <span class="mention_positive">{string}</span>',
-      'neutral_mentions': 'Neutral Mentions: <span class="mention_neutral">{string}</span>',
-      'negative_mentions': 'Negative Mentions: <span class="mention_negative">{string}</span>'
-    }
-  },
-  'sizeCount': 6,
-  'language': 'en',
-  'generationSpeed': 10,
-  'textSize': 12,
-  'rotationStep': 20,
 
   //DATA RETRIEVAL
   //use nanoajax to make a call to the server for the JSON content
-  _getDataFromURL: function(url, successCallback) {
-    nanoajax.ajax({url: url}, function (code, responseText) {
+  static _getDataFromURL(url, successCallback) {
+    nanoajax.ajax({url: url}, (code, responseText) => {
       if(code >= 200 && code < 300){
         successCallback(responseText);
       }
     });
-  },
+  }
   //callback for JSON data received
-  _dataReceived: function(data) {
+  _dataReceived(data) {
     this._rawData = data;
     this._data = JSON.parse(this._rawData);
     try {
@@ -115,10 +91,10 @@ Cloudia.prototype = {
     } catch(e) {
       console.error(e.message);
     }
-  },
+  }
   //DATA PROCESSING
   //initialise the data and begin library main functionality
-  _initialise: function() {
+  _initialise() {
     this._centerPosition = {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2
@@ -135,36 +111,39 @@ Cloudia.prototype = {
     this._sizes = this._calculateSizeRange();
     this._createCloudFromData();
 
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', _ => {
       clearTimeout(this._resizeDebounce);
-      this._resizeDebounce = setTimeout(this._resize.bind(this), 250);
-    }.bind(this));
-  },
+      this._resizeDebounce = setTimeout(this._resize, 250);
+    });
+  }
   //check the data conforms to expected schema
-  _checkSchema: function() {
+  _checkSchema() {
     if(!this._data['topics']) {
       throw new Error('Schema Error, expected root array named topics');
     }
-    var cleaned = [];
-    for(var i = 0; i < this._data['topics'].length; i++) {
-      if(!this._itemConformsToSchema(this._data['topics'][i], this._itemSchema)) {
+    let cleaned = [];
+    this._data['topics'].map((value, index) => {
+      if(!this._itemConformsToSchema(value, this._itemSchema)) {
         if(!this._ignoreBadItems) {
-          throw new Error('Schema Error, item: ' + i + ' does not conform to schema');
+          throw new Error('Schema Error, item: ' + index + ' does not conform to schema');
         } else {
-          console.warn('Item: ' + i + ' does not conform to schema, Ignoring', this._data['topics'][i]);
+          console.warn('Item: ' + index + ' does not conform to schema, Ignoring', value);
         }
       } else if(this._ignoreBadItems) {
-        cleaned.push(this._data['topics'][i]);
+        cleaned.push(value);
       }
-    }
+      return value;
+    });
 
     if(this._ignoreBadItems) {
       this._data['topics'] = cleaned;
     }
-  },
+
+    return cleaned;
+  }
   //check a single word item conforms to the required schema
-  _itemConformsToSchema: function(item, schema) {
-    for(var prop in schema) {
+  _itemConformsToSchema(item, schema) {
+    for(let prop in schema) {
       if (!item.hasOwnProperty(prop)) {
         return false;
       }
@@ -177,13 +156,14 @@ Cloudia.prototype = {
       }
     }
     return true;
-  },
+  }
   //create a range of values for sizing the words
-  _calculateSizeRange: function() {
-    var values = [];
-    for(var i = 0; i < this._data['topics'].length; i++) {
-      if(values.indexOf(this._data['topics'][i]['volume']) === -1) values.push(this._data['topics'][i]['volume']);
-    }
+  _calculateSizeRange() {
+    let values = [];
+    this._data['topics'].map((value, index) => {
+      if(values.indexOf(value['volume']) === -1) values.push(value['volume']);
+      return value;
+    });
     values.sort(function(a,b) {
       return a - b;
     });
@@ -191,18 +171,19 @@ Cloudia.prototype = {
       values = this._averageClosesValues(values);
     }
     return values;
-  },
+  }
   //OUTPUT GENERATION
   //create the cloud from the JSON array
-  _createCloudFromData: function() {
+  _createCloudFromData() {
     //generate word DOM Elements
-    for(var i = 0; i < this._data['topics'].length; i++) {
-      this._data['topics'][i].el = this._createWord(this._data['topics'][i]);
-    }
+    this._data['topics'].map((value, index) => {
+      value.el = this._createWord(value);
+      return value;
+    });
     this._layoutWords();
-  },
+  }
   //layout words on screen
-  _layoutWords: function() {
+  _layoutWords() {
     //sort from most popular to least
     this._positions = [];
     this._data['topics'].sort(function(a, b) {
@@ -210,25 +191,26 @@ Cloudia.prototype = {
     });
 
     //add all elements, measure and then calculate optimal position
-    for(var i = 0; i < this._data['topics'].length; i++) {
-      this._targetEl.appendChild(this._data['topics'][i].el);
-      setTimeout(function(item) {
+    this._data['topics'].map((value, index) => {
+      this._targetEl.appendChild(value.el);
+      setTimeout((item => {
         item.width = item.el.clientWidth;
         item.height = item.el.clientHeight;
         this._setWordPosition(item);
-      }.bind(this, this._data['topics'][i]), 100);
-    }
-  },
+      }).bind(undefined, value), 100);
+      return value;
+    });
+  }
   //generate word dom object with metadata info
-  _createWord: function(item) {
-    var wordContainer = document.createElement('div');
+  _createWord(item) {
+    const wordContainer = document.createElement('div');
     wordContainer.className = 'cloudWordContainer';
-    var word = document.createElement('span');
+    const word = document.createElement('span');
     word.innerText = item['label'];
     word.className = 'cloudWord';
     this._setWordProperties(item, word);
 
-    var stats = document.createElement('div');
+    const stats = document.createElement('div');
     stats.className = 'metadata';
     stats.innerHTML = '<h4>' + this._formatString('stats_title', item['label']) + '</h4>' +
       '<p>' + this._formatString('total_mentions', item['volume']) + '</p>' +
@@ -241,9 +223,9 @@ Cloudia.prototype = {
     wordContainer.appendChild(stats);
 
     return wordContainer;
-  },
+  }
   //set word colors and sizes
-  _setWordProperties: function(item, el) {
+  _setWordProperties(item, el) {
     if(item['sentimentScore'] > 60) {
       item.display = 'positive';
     } else if(item['sentimentScore'] < 40) {
@@ -254,31 +236,36 @@ Cloudia.prototype = {
 
     el.className += ' ' + item.display;
     this._setWordSize(item, el);
-  },
-  _setWordSize: function(item, el) {
+
+    return item;
+  }
+
+  _setWordSize(item, el) {
     if(el == null) {
       el = item.el.querySelector('.cloudWord');
     }
     item.size = this._getClosestArrayItem(item['volume'], this._sizes) + 1;
     el.style.fontSize = (item.size) + 'em';
-  },
+
+    return item;
+  }
   //set the position of a single block, dont allow overlap with any over block
-  _setWordPosition: function(item) {
+  _setWordPosition(item) {
     //start at center and move out
-    var x = this._centerPosition.x - (item.width / 2);
-    var y = this._centerPosition.y - (item.height / 2);
+    let x = this._centerPosition.x - (item.width / 2);
+    let y = this._centerPosition.y - (item.height / 2);
 
     item.el.querySelector('.cloudWord').style.width = item.width + 'px';
     item.el.querySelector('.cloudWord').style.height = item.height + 'px';
 
-    var moveAmount = 0;
+    let moveAmount = 0;
     while(this._isOverlappingExisting(x, y, item.width, item.height)) {
       moveAmount += this['generationSpeed'];
-      var rotation = 0;
+      let rotation = 0;
       while(rotation < 360) {
-        var rads = this._degreesToRads(rotation);
-        var xM = Math.cos(rads) * moveAmount;
-        var yM = Math.sin(rads) * moveAmount;
+        let rads = Cloudia._degreesToRads(rotation);
+        let xM = Math.cos(rads) * moveAmount;
+        let yM = Math.sin(rads) * moveAmount;
         if (!this._isOverlappingExisting(x + xM, y + yM, item.width, item.height)) {
           x = x + xM;
           y = y + yM;
@@ -299,23 +286,28 @@ Cloudia.prototype = {
       width: item.width,
       height: item.height
     });
-  },
-  _degreesToRads: function(angle) {
+
+    return item;
+  }
+
+  static _degreesToRads(angle) {
     return angle * (Math.PI / 180);
-  },
+  }
   //check if current item overlaps any known items
-  _isOverlappingExisting: function(x, y, w, h) {
-    for(var i = 0; i < this._positions.length; i++) {
-      var existing = this._positions[i];
-      if(!(existing.x > x + w ||
-        existing.x + existing.width < x ||
-        existing.y > y + h ||
-        existing.y + existing.height < y)) return true;
-    }
-    return false;
-  },
+  _isOverlappingExisting(x, y, w, h) {
+    if(!this._positions.length) return false;
+    let over = false;
+    this._positions.forEach((item) => {
+      if (!(item.x > x + w ||
+        item.x + item.width < x ||
+        item.y > y + h ||
+        item.y + item.height < y)) over = true;
+    });
+
+    return over;
+  }
   //recenter canvas on resize
-  _resize: function() {
+  _resize() {
     this._centerPosition = {
       x: window.innerWidth / 2,
       y: window.innerHeight / 2
@@ -327,126 +319,130 @@ Cloudia.prototype = {
       };
     }
     this._layoutWords();
-  },
+  }
   //UTILS
   //check if an item is a valid DOM element
-  _isDomElement: function(el) {
+  static _isDomElement(el) {
     try {
       return el instanceof HTMLElement;
     } catch(e) {
       //Older browser unsupported?
       throw new  Error('Browser is unsupported');
     }
-  },
+  }
   //format a string from i18n values
-  _formatString: function(id, data) {
+  _formatString(id, data) {
     if(!this._i18n[this['language']][id]) {
       throw new Error('Translation for String ID: ' + id + ' not found, check translations file for language: ' + this.language);
     }
-    var string = this._i18n[this['language']][id];
+    let string = this._i18n[this['language']][id];
     if(data !== undefined && string.indexOf('{string}') > -1) {
       return string.replace('{string}', data);
     } else {
       return string;
     }
-  },
+  }
   //get closest number in array
-  _getClosestArrayItem: function(val, array){
-    var minimum = 999999;
-    var out = 0;
-    for(var i in array) {
-      var dif = Math.abs(val-array[i]);
+  _getClosestArrayItem(val, array) {
+    let minimum = 999999;
+    let out = 0;
+    array.map((value, index) => {
+      let dif = Math.abs(val-value);
       if(dif < minimum) {
         minimum = dif;
-        out = i;
+        out = index;
       }
-    }
+      return value;
+    });
     return parseInt(out, 10);
-  },
+  }
   //reduce an array of number by one, removing the two closes values and replacing with the average of the two
-  _averageClosesValues: function(array) {
+  _averageClosesValues(array) {
     array.sort(function(a,b) {
       return a - b;
     });
-    var min = 999999;
-    var value = 0;
-    for(var i in array) {
-      var dif = array[i + 1] - i;
+    let min = 999999;
+    let val = 0;
+    array.map((value, index) => {
+      var dif = array[index + 1] - value;
       if(dif < min) {
-        value = i;
+        val = index;
         min = dif;
       }
-    }
-    array.splice(value, 2, (array[value] + array[parseInt(value, 10) + 1]) / 2);
+      return value;
+    });
+
+    array.splice(val, 2, (array[val] + array[parseInt(val, 10) + 1]) / 2);
     return array;
-  },
+  }
   //inner workings for 'setSizeCount' method
-  _updateSizeCount: function(count) {
+  _updateSizeCount(count) {
     this['sizeCount'] = parseInt(count, 10);
     this._sizes = this._calculateSizeRange();
-    for(var i in this._data['topics']) {
-      this._setWordSize(this._data['topics'][i]);
-    }
+    this._data['topics'].map((value, index) => {
+      this._setWordSize(value);
+      return value;
+    });
     this._layoutWords();
-  },
+  }
   //inner workings for 'setGenerationSpeed' method
-  _updateGenerationSpeed: function(speed) {
+  _updateGenerationSpeed(speed) {
     this['generationSpeed'] = parseInt(speed, 10);
     this._layoutWords();
-  },
+  }
   //inner workings for 'setRotationStep' method
-  _updateRotationStep: function(step) {
+  _updateRotationStep(step) {
     this['rotationStep'] = parseInt(step, 10);
     this._layoutWords();
-  },
+  }
   //inner workings for 'setTextSize' method
-  _updateTextSize: function(size) {
+  _updateTextSize(size) {
     this['textSize'] = parseInt(size, 10);
     this._targetEl.style.fontSize = this['textSize'] + 'px';
     this._layoutWords();
-  },
+  }
 
   //PUBLIC METHODS
   /**
    * change number of different text sizes available at run time (Will regenerate the cloud)
    * @param {number} count - Maximum number of text sizes
    */
-  'setSizeCount': function(count) {
+  'setSizeCount'(count) {
     if(typeof count !== 'number') {
       throw new Error('value must be a number');
     }
     clearTimeout(this._sizeDebounce);
     this._sizeDebounce = setTimeout(this._updateSizeCount.bind(this, count), 250);
-  },
+  }
   /**
    * change the generation speed at run time (Will regenerate the cloud)
    * @param {number} speed - generation speed, the lower the number, the closer your words are likely to be,
    * higher numbers will generate significantly faster
    */
-  'setGenerationSpeed': function(speed) {
+  'setGenerationSpeed'(speed) {
     if(typeof speed !== 'number') {
       throw new Error('value must be a number');
     }
     clearTimeout(this._generationDebounce);
     this._generationDebounce = setTimeout(this._updateGenerationSpeed.bind(this, speed), 250);
-  },
+  }
   /**
    * change the rotation step side at run time (Will regenerate the cloud)
    * @param {number} step - rotation step size (in degrees), the lower the number, the closer your words are likely to be,
    * higher numbers will generate significantly faster
    */
-  'setRotationStep': function(step) {
+  'setRotationStep'(step) {
     if(typeof step !== 'number') {
       throw new Error('value must be a number');
     }
     clearTimeout(this._stepDebounce);
     this._stepDebounce = setTimeout(this._updateRotationStep.bind(this, step), 250);
-  },
+  }
   /**
    * change the overall text size at run time (Will regenerate the cloud)
    * @param {number} size - base font size in pixels, this number will represent the smallest word height in pixels.
    */
-  'setTextSize': function(size) {
+  'setTextSize'(size) {
     if(typeof size !== 'number') {
       throw new Error('value must be a number');
     }
@@ -454,6 +450,31 @@ Cloudia.prototype = {
     this._textDebounce = setTimeout(this._updateTextSize.bind(this, size), 250);
   }
 };
+
+//vars
+Cloudia.prototype._itemSchema = {
+  'label': 'string',
+    'sentimentScore': 'number',
+    'sentiment': 'object',
+    'volume': 'number',
+    'id': 'string'
+};
+
+Cloudia.prototype._i18n = {
+  'en': {
+    'stats_title': 'Information on topic \"{string}\":',
+      'total_mentions': 'Total Mentions: {string}',
+      'positive_mentions': 'Positive Mentions: <span class="mention_positive">{string}</span>',
+      'neutral_mentions': 'Neutral Mentions: <span class="mention_neutral">{string}</span>',
+      'negative_mentions': 'Negative Mentions: <span class="mention_negative">{string}</span>'
+  }
+};
+
+Cloudia.prototype['sizeCount'] = 6;
+Cloudia.prototype['language'] = 'en';
+Cloudia.prototype['generationSpeed'] = 10;
+Cloudia.prototype['textSize'] = 12;
+Cloudia.prototype['rotationStep'] = 20;
 
 //Export for Closure compiler
 window['Cloudia'] = Cloudia;
